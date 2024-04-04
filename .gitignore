@@ -1,52 +1,62 @@
-# Prerequisites
-*.d
+#include <Servo.h>
+#include <Keypad.h>
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+Servo ServoMotor;
+char* password = "809202";  // change the password here, just pick any 3 numbers
+int position = 0;
+const byte ROWS = 4;
+const byte COLS = 4;
+char keys[ROWS][COLS] = {
+{'1','2','3','A'},
+{'4','5','6','B'},
+{'7','8','9','C'},
+{'*','0','#','D'}
+};
 
-# Linker output
-*.ilk
-*.map
-*.exp
+byte rowPins[ROWS] = { A0, A1, A2, A3 };//Pin may change according to sutability
+byte colPins[COLS] = { 3, 2, 1, 0 };
+Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
+int RedpinLock = 12;
+int GreenpinUnlock = 13;
 
-# Precompiled Headers
-*.gch
-*.pch
+void setup()
+{
+pinMode(RedpinLock, OUTPUT);
+pinMode(GreenpinUnlock, OUTPUT);
+ServoMotor.attach(11);
+LockedPosition(true);
+}
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+void loop()
+{
+char key = keypad.getKey();
+if (key == '*' || key == '#')
+{
+position = 0;
+LockedPosition(true);
+}
+if (key == password[position])
+{
+position ++;
+}
+if (position == 6)
+{
+LockedPosition(false);
+}
+delay(100);
+}
+void LockedPosition(int locked)
+{
+if (locked)
+{
+digitalWrite(RedpinLock, HIGH);
+digitalWrite(GreenpinUnlock, LOW);
+ServoMotor.write(0);
+}
+else
+{
+digitalWrite(RedpinLock, LOW);
+digitalWrite(GreenpinUnlock, HIGH);
+ServoMotor.write(90);
+}
+}
